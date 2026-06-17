@@ -310,6 +310,8 @@
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                             </button>
                         </div>
+                        <!-- Model Price Indicator -->
+                        <div id="modelPriceInfo" class="mt-2 text-xs font-mono hidden"></div>
                     </div>
 
                     <!-- Files -->
@@ -363,6 +365,12 @@
             </div>
         </div>
     </main>
+
+    <!-- Floating Thinking Indicator -->
+    <div id="thinkingIndicator" class="fixed bottom-6 right-6 z-50 hidden glass-strong rounded-lg px-4 py-3 shadow-2xl border border-white/10 text-xs text-zinc-300 flex items-center gap-2 animate-in">
+        <span class="dot-pulse"><span></span><span></span><span></span></span>
+        <span id="thinkingStats">Thinking...</span>
+    </div>
 
     <script>
         let uploadedFiles = [];
@@ -456,6 +464,68 @@
             renderModelDropdown(modelSearch.value);
         }
 
+        function updateModelPrice() {
+            const modelId = modelSelectHidden.value;
+            const priceInfo = document.getElementById('modelPriceInfo');
+            if (!modelId || !modelsMap[modelId]) {
+                priceInfo.classList.add('hidden');
+                return;
+            }
+            
+            const modelData = modelsMap[modelId];
+            const pricing = modelData.pricing || {};
+            let promptPrice = parseFloat(pricing.prompt || pricing.input || 0);
+            let completionPrice = parseFloat(pricing.completion || pricing.output || 0);
+            const unit = (pricing.unit || "").toLowerCase();
+            
+            let inputPricePer1M = 0;
+            let outputPricePer1M = 0;
+            let hasPricing = false;
+
+            if (promptPrice > 0 || completionPrice > 0) {
+                hasPricing = true;
+                if (unit.includes("million") || unit.includes("1m")) { 
+                    inputPricePer1M = promptPrice; 
+                    outputPricePer1M = completionPrice; 
+                }
+                else if (unit.includes("k") || unit.includes("1k") || unit.includes("thousand")) { 
+                    inputPricePer1M = promptPrice * 1000; 
+                    outputPricePer1M = completionPrice * 1000; 
+                }
+                else { 
+                    if (promptPrice > 0.1 && !unit.includes("token")) { 
+                        inputPricePer1M = promptPrice; 
+                        outputPricePer1M = completionPrice; 
+                    } else { 
+                        inputPricePer1M = promptPrice * 1000000; 
+                        outputPricePer1M = completionPrice * 1000000; 
+                    } 
+                }
+            }
+
+            if (hasPricing) {
+                priceInfo.innerHTML = `
+                    <div class="flex flex-wrap items-center gap-3 mt-1">
+                        <span class="flex items-center gap-1.5">
+                            <span class="text-zinc-500">Input:</span> 
+                            <strong class="text-emerald-400 font-semibold">$${inputPricePer1M.toFixed(2)}</strong>
+                            <span class="text-zinc-600">/ 1M tokens</span>
+                        </span>
+                        <span class="text-zinc-700">|</span>
+                        <span class="flex items-center gap-1.5">
+                            <span class="text-zinc-500">Output:</span> 
+                            <strong class="text-amber-400 font-semibold">$${outputPricePer1M.toFixed(2)}</strong>
+                            <span class="text-zinc-600">/ 1M tokens</span>
+                        </span>
+                    </div>
+                `;
+                priceInfo.classList.remove('hidden');
+            } else {
+                priceInfo.innerHTML = `<div class="mt-1 text-zinc-600 italic">Pricing information not available for this model.</div>`;
+                priceInfo.classList.remove('hidden');
+            }
+        }
+
         function renderModelDropdown(filter) {
             modelDropdown.innerHTML = '';
             const filtered = allModels.filter(m => m.toLowerCase().includes(filter.toLowerCase()));
@@ -490,19 +560,18 @@
                 `;
                 div.querySelector('.model-name').textContent = model;
                 
-                // Attach mousedown specifically to the model name to select it
                 div.querySelector('.model-name').addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     modelSelectHidden.value = model;
                     modelSearch.value = model;
                     modelDropdown.classList.add('hidden');
                     localStorage.setItem('nanogpt_model', model);
+                    updateModelPrice();
                 });
                 
-                // Attach mousedown specifically to the star button to toggle favorite
                 div.querySelector('.star-btn').addEventListener('mousedown', (e) => {
                     e.preventDefault();
-                    e.stopPropagation(); // Prevents it from bubbling up
+                    e.stopPropagation(); 
                     toggleFavorite(model);
                 });
                 
@@ -569,6 +638,7 @@
                     localStorage.setItem('nanogpt_model', allModels[0]);
                 } else { modelSearch.value = ''; }
                 renderModelDropdown('');
+                updateModelPrice();
             } catch (err) { modelSearch.value = 'Error loading models'; console.error(err); }
             finally { modelSearch.disabled = false; }
         }
@@ -632,7 +702,11 @@
         function loadChat(id) {
             const chat = chatHistory.find(c => c.id === id); if (!chat) return;
             currentChatId = id; document.getElementById('prompt').value = chat.prompt;
-            if (chat.model && allModels.includes(chat.model)) { modelSelectHidden.value = chat.model; modelSearch.value = chat.model; }
+            if (chat.model && allModels.includes(chat.model)) { 
+                modelSelectHidden.value = chat.model; 
+                modelSearch.value = chat.model; 
+                updateModelPrice();
+            }
             if (chat.mode !== undefined) searchMode.value = chat.mode;
             uploadedFiles = []; renderFileList(); renderApiResponse(chat.apiResponse); renderHistory();
             if (window.innerWidth < 768) toggleSidebar();
@@ -792,17 +866,27 @@
 
             const updateUI = () => {
                 let html = "";
+                const thinkingIndicator = document.getElementById('thinkingIndicator');
+                const thinkingStats = document.getElementById('thinkingStats');
+
                 if (reasoning) {
                     const estTokens = Math.ceil(reasoning.length / 4);
                     const estCost = estTokens * outputPricePerToken;
+                    
+                    thinkingIndicator.classList.remove('hidden');
+                    thinkingStats.textContent = `Thinking · ${reasoning.length.toLocaleString()} chars · ~${estTokens.toLocaleString()} tokens · ~$${estCost.toFixed(6)}`;
+
                     html += `<details class="mb-5" open>
                                <summary class="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300 transition select-none flex items-center gap-1.5">
-                                   <span class="dot-pulse"><span></span><span></span><span></span></span>
-                                   Thinking · ${reasoning.length.toLocaleString()} chars · ~${estTokens.toLocaleString()} tokens · ~$${estCost.toFixed(6)}
+                                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                   Reasoning Process
                                </summary>
                                <div class="mt-3 p-4 bg-black/30 rounded-lg border border-white/5 text-[13px] text-zinc-400 whitespace-pre-wrap font-mono leading-relaxed">${escapeHtml(reasoning)}</div>
                              </details>`;
+                } else {
+                    thinkingIndicator.classList.add('hidden');
                 }
+
                 if (content) {
                     try { html += marked.parse(content); } catch(e) { html += `<div class="whitespace-pre-wrap">${escapeHtml(content)}</div>`; }
                 } else if (!reasoning) {
@@ -906,6 +990,7 @@
                 }
             } finally {
                 sendBtn.disabled = false; stopBtn.classList.add('hidden'); abortController = null;
+                document.getElementById('thinkingIndicator').classList.add('hidden');
                 setTimeout(() => { if (!abortController) autoScrollContainer.classList.add('hidden'); }, 2000);
             }
         }
