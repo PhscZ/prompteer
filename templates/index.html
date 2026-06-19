@@ -196,6 +196,82 @@
             -webkit-text-fill-color: transparent;
         }
 
+        /* Model tag chip */
+        .model-tag {
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.3);
+            transition: all 0.15s;
+            font-size: 12px;
+        }
+        .model-tag:hover { border-color: rgba(99,102,241,0.5); }
+        .model-tag .remove-tag { cursor: pointer; color: rgba(165,180,252,0.6); transition: color 0.15s; }
+        .model-tag .remove-tag:hover { color: #f87171; }
+
+        /* Toggle switch */
+        .toggle-track {
+            width: 36px; height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .toggle-track.active { background: rgba(99,102,241,0.5); border-color: rgba(99,102,241,0.6); }
+        .toggle-track .toggle-knob {
+            width: 14px; height: 14px;
+            background: #d4d4d8;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px; left: 2px;
+            transition: all 0.2s;
+        }
+        .toggle-track.active .toggle-knob { left: 18px; background: #a5b4fc; }
+
+        /* Multi-response panel */
+        .responses-row {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 0.5rem;
+        }
+        .responses-row::-webkit-scrollbar { height: 6px; }
+        .responses-row::-webkit-scrollbar-track { background: transparent; }
+        .responses-row::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .responses-row::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+        .response-panel {
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: border-color 0.2s;
+            min-width: min(600px, 85vw);
+            max-width: min(800px, 85vw);
+            flex: 1 0 0;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            max-height: 75vh;
+        }
+        .responses-row.single .response-panel {
+            min-width: 0;
+            max-width: 100%;
+            flex: 1;
+            max-height: none;
+        }
+        .response-panel:hover { border-color: rgba(255,255,255,0.12); }
+        .response-panel-header {
+            background: rgba(99,102,241,0.06);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .panel-content {
+            overflow-y: auto;
+            flex: 1;
+        }
+        .panel-content::-webkit-scrollbar { width: 6px; }
+        .panel-content::-webkit-scrollbar-track { background: transparent; }
+        .panel-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        .panel-content::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
         /* Model dropdown item */
         .model-item {
             transition: all 0.1s;
@@ -204,6 +280,10 @@
         .model-item:hover {
             background: rgba(99,102,241,0.12);
             border-left-color: var(--accent);
+        }
+        .model-item.selected {
+            background: rgba(99,102,241,0.08);
+            border-left-color: var(--accent-dim);
         }
 
         /* Subtle entrance animations */
@@ -216,6 +296,49 @@
         /* Glow accent */
         .accent-glow { box-shadow: 0 0 24px rgba(99,102,241,0.15); }
 
+        /* Context thread visual link */
+        .context-thread {
+            position: relative;
+            padding-left: 20px !important;
+        }
+        .context-thread::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            border-radius: 1px;
+            background: var(--thread-color, rgba(99,102,241,0.25));
+        }
+        .context-thread.thread-first::before { top: 50%; }
+        .context-thread.thread-last::before { bottom: 50%; }
+        .context-thread.thread-only::before { display: none; }
+        .context-thread .thread-dot {
+            position: absolute;
+            left: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 2px solid var(--bg-panel);
+        }
+        .context-thread.thread-first .thread-dot { top: 50%; }
+        .context-thread.thread-last .thread-dot { top: 50%; }
+
+        /* Sidebar collapse */
+        body.sidebar-collapsed #sidebar {
+            width: 0 !important;
+            min-width: 0 !important;
+            overflow: hidden;
+            border: none;
+            padding: 0;
+        }
+        body.sidebar-collapsed #sidebar > * { opacity: 0; transition: opacity 0.15s; }
+        #sidebar > * { opacity: 1; transition: opacity 0.15s; }
+
         /* Textarea resize handle hidden but auto-grow feel */
         textarea { field-sizing: content; }
     </style>
@@ -225,7 +348,7 @@
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-10 hidden md:hidden" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-[280px] glass flex flex-col h-screen fixed md:relative transition-transform duration-300 -translate-x-full md:translate-x-0 z-20 border-r border-white/5">
+    <aside id="sidebar" class="w-[280px] min-w-[280px] glass flex flex-col h-screen fixed md:relative transition-all duration-300 -translate-x-full md:translate-x-0 z-20 border-r border-white/5">
         <!-- Logo / Brand -->
         <div class="px-5 py-5 border-b border-white/5 flex items-center justify-between">
             <div class="flex items-center gap-2.5">
@@ -233,7 +356,7 @@
                     <div class="font-bold text-[15px] leading-tight">Prompteer</div>
                 </div>
             </div>
-            <button onclick="toggleSidebar()" class="md:hidden text-zinc-500 hover:text-white text-2xl leading-none">×</button>
+            <button onclick="toggleSidebar()" class="text-zinc-500 hover:text-white text-2xl leading-none">×</button>
         </div>
 
         <div class="p-3">
@@ -260,8 +383,8 @@
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
         <!-- Header -->
         <header class="px-5 py-3.5 border-b border-white/5 flex items-center glass-strong z-10">
-            <button onclick="toggleSidebar()" class="md:hidden mr-3 text-zinc-400 hover:text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <button onclick="toggleSidebar()" class="mr-3 text-zinc-400 hover:text-white transition">
+                <svg id="sidebarToggleIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
             <h1 class="text-base font-semibold flex items-center gap-2">
                 <span class="gradient-text">NanoGPT</span>
@@ -275,7 +398,7 @@
         </header>
 
         <div id="mainScrollContainer" class="flex-1 overflow-y-auto custom-scrollbar">
-            <div class="max-w-3xl mx-auto px-4 py-6">
+            <div class="max-w-5xl mx-auto px-4 py-6">
 
                 <!-- Config Card -->
                 <div class="glass rounded-2xl p-6 md:p-8 mb-6 animate-in">
@@ -296,15 +419,15 @@
                         </div>
                     </div>
 
-                    <!-- Model Selector -->
+                    <!-- Model Selector (Multi) -->
                     <div class="mb-5 md:mb-7">
-                        <label class="block text-xs md:text-sm font-semibold mb-1.5 md:mb-2 text-zinc-400 uppercase tracking-wide">Model</label>
+                        <label class="block text-xs md:text-sm font-semibold mb-1.5 md:mb-2 text-zinc-400 uppercase tracking-wide">Models <span id="modelCount" class="text-indigo-400/60 font-normal normal-case"></span></label>
+                        <div id="selectedModelTags" class="flex flex-wrap gap-1.5 mb-2 hidden"></div>
                         <div class="flex gap-2">
                             <div class="relative flex-1">
-                                <input type="text" id="modelSearch" placeholder="Select or search models..." class="field w-full px-3.5 md:px-4 py-2.5 md:py-3.5 rounded-lg text-sm md:text-base text-zinc-100 placeholder-zinc-600 outline-none" autocomplete="off">
+                                <input type="text" id="modelSearch" placeholder="Search and select models..." class="field w-full px-3.5 md:px-4 py-2.5 md:py-3.5 rounded-lg text-sm md:text-base text-zinc-100 placeholder-zinc-600 outline-none" autocomplete="off">
                                 <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                 <div id="modelDropdown" class="absolute z-30 w-full mt-1.5 glass-strong rounded-lg shadow-2xl max-h-60 overflow-y-auto hidden custom-scrollbar"></div>
-                                <input type="hidden" id="modelSelect" value="">
                             </div>
                             <button onclick="fetchModels()" class="btn-ghost px-3.5 py-2.5 rounded-lg text-sm text-zinc-300 flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -317,11 +440,25 @@
                     <!-- Files -->
                     <div id="fileList" class="mb-4 flex flex-wrap gap-2"></div>
 
+                    <!-- Context Toggle -->
+                    <div class="mb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div id="contextToggle" class="toggle-track active" onclick="toggleContext()">
+                                <div class="toggle-knob"></div>
+                            </div>
+                            <div>
+                                <span class="text-sm text-zinc-300 font-medium">Chat Context</span>
+                                <span class="text-[11px] text-zinc-500 ml-1.5">Include conversation history</span>
+                            </div>
+                        </div>
+                        <button onclick="clearChatContext()" class="text-[11px] text-zinc-500 hover:text-red-400 transition px-2 py-1 rounded hover:bg-white/5" title="Clear conversation context">Clear Context</button>
+                    </div>
+
                     <!-- Prompt -->
                     <div class="mb-4 md:mb-6">
                         <label class="block text-xs md:text-sm font-semibold mb-1.5 md:mb-2 text-zinc-400 uppercase tracking-wide">Prompt</label>
                         <div id="promptDropZone" class="relative field rounded-lg transition-colors">
-                            <textarea id="prompt" rows="4" class="w-full px-3.5 md:px-4 py-3 md:py-4 pr-12 pb-10 bg-transparent border-none outline-none resize-none text-sm md:text-base text-zinc-100 placeholder-zinc-600" placeholder="Ask anything, describe files, or drag & drop here..."></textarea>
+                            <textarea id="prompt" rows="6" class="w-full px-3.5 md:px-4 py-3 md:py-4 pr-12 pb-10 bg-transparent border-none outline-none resize-none text-sm md:text-base text-zinc-100 placeholder-zinc-600" placeholder="Ask anything, describe files, or drag & drop here..."></textarea>
                             <input type="file" id="fileInput" class="hidden" multiple>
                             <button type="button" onclick="document.getElementById('fileInput').click()" class="absolute right-2.5 bottom-2.5 p-2 text-zinc-500 hover:text-indigo-400 hover:bg-white/5 rounded-lg transition" title="Attach Files">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -350,9 +487,12 @@
                     </div>
                 </div>
 
-                <!-- Response -->
-                <div id="response" class="glass rounded-2xl p-6 min-h-[120px] prose max-w-none hidden animate-in"></div>
+            </div><!-- close max-w-5xl -->
 
+            <!-- Responses (multi-model, side-by-side, full width) -->
+            <div id="responsesContainer" class="responses-row hidden animate-in px-4"></div>
+
+            <div class="max-w-5xl mx-auto px-4">
                 <!-- Auto Scroll Button Container -->
                 <div class="flex justify-center mt-6 mb-8 hidden" id="autoScrollContainer">
                     <button id="autoScrollBtn" onclick="toggleAutoScroll()" class="px-4 py-2 btn-ghost rounded-full shadow-lg text-zinc-300 text-xs font-semibold flex items-center gap-2 transition-all border border-white/10">
@@ -372,14 +512,24 @@
         <span id="thinkingStats">Thinking...</span>
     </div>
 
+    <!-- Multi-model thinking panel -->
+    <div id="multiThinkingPanel" class="fixed bottom-6 right-6 z-50 hidden glass-strong rounded-lg shadow-2xl border border-white/10 text-xs animate-in max-w-xs">
+        <div class="px-3 py-2 border-b border-white/5 text-zinc-400 font-semibold text-[10px] uppercase tracking-wider">Streaming</div>
+        <div id="multiThinkingList" class="p-2 space-y-1"></div>
+    </div>
+
     <script>
         let uploadedFiles = [];
         let allModels = [];
         let modelsMap = {};
         let chatHistory = [];
         let currentChatId = null;
-        let abortController = null;
+        let currentSessionId = null;
+        let abortControllers = {};
         let favoriteModels = JSON.parse(localStorage.getItem('nanogpt_favorite_models') || '[]');
+        let selectedModels = JSON.parse(localStorage.getItem('nanogpt_selected_models') || '[]');
+        let contextEnabled = localStorage.getItem('nanogpt_context') !== 'false';
+        let chatMessages = [];
 
         let autoScrollEnabled = localStorage.getItem('nanogpt_autoscroll') !== 'false';
         const mainScrollContainer = document.getElementById('mainScrollContainer');
@@ -412,13 +562,14 @@
         const apiKeyInput = document.getElementById('apiKey');
         const modelSearch = document.getElementById('modelSearch');
         const modelDropdown = document.getElementById('modelDropdown');
-        const modelSelectHidden = document.getElementById('modelSelect');
+        const selectedModelTagsEl = document.getElementById('selectedModelTags');
+        const modelCountEl = document.getElementById('modelCount');
         const searchMode = document.getElementById('searchMode');
         const fileList = document.getElementById('fileList');
         const promptDropZone = document.getElementById('promptDropZone');
         const dropOverlay = document.getElementById('dropOverlay');
         const fileInput = document.getElementById('fileInput');
-        const responseDiv = document.getElementById('response');
+        const responsesContainer = document.getElementById('responsesContainer');
         const sendBtn = document.getElementById('sendBtn');
         const stopBtn = document.getElementById('stopBtn');
 
@@ -447,89 +598,114 @@
         document.addEventListener('click', (e) => {
             if (!modelSearch.contains(e.target) && !modelDropdown.contains(e.target)) {
                 modelDropdown.classList.add('hidden');
-                if (modelSelectHidden.value && modelSearch.value !== modelSelectHidden.value) {
-                    modelSearch.value = modelSelectHidden.value;
-                }
             }
         });
 
+        function toggleContext() {
+            contextEnabled = !contextEnabled;
+            localStorage.setItem('nanogpt_context', contextEnabled.toString());
+            const track = document.getElementById('contextToggle');
+            if (contextEnabled) { track.classList.add('active'); }
+            else { track.classList.remove('active'); }
+        }
+
+        function clearChatContext() {
+            chatMessages = [];
+            currentSessionId = null;
+            renderChatContextIndicator();
+        }
+
+        function renderChatContextIndicator() {
+            const count = chatMessages.filter(m => m.role === 'user').length;
+            const btn = document.querySelector('button[onclick="clearChatContext()"]');
+            if (btn) {
+                btn.textContent = count > 0 ? `Clear Context (${count} turns)` : 'Clear Context';
+            }
+        }
+
+        function renderSelectedModelTags() {
+            selectedModelTagsEl.innerHTML = '';
+            if (selectedModels.length === 0) {
+                selectedModelTagsEl.classList.add('hidden');
+                modelCountEl.textContent = '';
+                return;
+            }
+            selectedModelTagsEl.classList.remove('hidden');
+            modelCountEl.textContent = `(${selectedModels.length} selected)`;
+            selectedModels.forEach(model => {
+                const tag = document.createElement('div');
+                tag.className = 'model-tag px-2.5 py-1 rounded-md flex items-center gap-1.5 text-indigo-200';
+                tag.innerHTML = `<span class="truncate max-w-[200px]">${escapeHtml(model)}</span><span class="remove-tag text-xs font-bold" onclick="removeModel('${escapeHtml(model)}')">×</span>`;
+                selectedModelTagsEl.appendChild(tag);
+            });
+        }
+
+        function toggleModelInSelection(model) {
+            const idx = selectedModels.indexOf(model);
+            if (idx > -1) {
+                selectedModels.splice(idx, 1);
+            } else {
+                selectedModels.push(model);
+            }
+            localStorage.setItem('nanogpt_selected_models', JSON.stringify(selectedModels));
+            renderSelectedModelTags();
+            renderModelDropdown(modelSearch.value);
+            updateModelPrice();
+        }
+
+        function removeModel(model) {
+            selectedModels = selectedModels.filter(m => m !== model);
+            localStorage.setItem('nanogpt_selected_models', JSON.stringify(selectedModels));
+            renderSelectedModelTags();
+            renderModelDropdown(modelSearch.value);
+            updateModelPrice();
+        }
+
         function toggleFavorite(modelId) {
             const idx = favoriteModels.indexOf(modelId);
-            if (idx > -1) {
-                favoriteModels.splice(idx, 1);
-            } else {
-                favoriteModels.push(modelId);
-            }
+            if (idx > -1) { favoriteModels.splice(idx, 1); }
+            else { favoriteModels.push(modelId); }
             localStorage.setItem('nanogpt_favorite_models', JSON.stringify(favoriteModels));
             renderModelDropdown(modelSearch.value);
         }
 
         function updateModelPrice() {
-            const modelId = modelSelectHidden.value;
             const priceInfo = document.getElementById('modelPriceInfo');
-            if (!modelId || !modelsMap[modelId]) {
-                priceInfo.classList.add('hidden');
-                return;
-            }
-            
-            const modelData = modelsMap[modelId];
-            const pricing = modelData.pricing || {};
-            let promptPrice = parseFloat(pricing.prompt || pricing.input || 0);
-            let completionPrice = parseFloat(pricing.completion || pricing.output || 0);
-            const unit = (pricing.unit || "").toLowerCase();
-            
-            let inputPricePer1M = 0;
-            let outputPricePer1M = 0;
-            let hasPricing = false;
+            if (selectedModels.length === 0) { priceInfo.classList.add('hidden'); return; }
 
-            if (promptPrice > 0 || completionPrice > 0) {
-                hasPricing = true;
-                if (unit.includes("million") || unit.includes("1m")) { 
-                    inputPricePer1M = promptPrice; 
-                    outputPricePer1M = completionPrice; 
-                }
-                else if (unit.includes("k") || unit.includes("1k") || unit.includes("thousand")) { 
-                    inputPricePer1M = promptPrice * 1000; 
-                    outputPricePer1M = completionPrice * 1000; 
-                }
-                else { 
-                    if (promptPrice > 0.1 && !unit.includes("token")) { 
-                        inputPricePer1M = promptPrice; 
-                        outputPricePer1M = completionPrice; 
-                    } else { 
-                        inputPricePer1M = promptPrice * 1000000; 
-                        outputPricePer1M = completionPrice * 1000000; 
-                    } 
-                }
-            }
+            let html = '<div class="space-y-1 mt-1">';
+            selectedModels.forEach(modelId => {
+                const modelData = modelsMap[modelId];
+                if (!modelData) return;
+                const pricing = modelData.pricing || {};
+                let promptPrice = parseFloat(pricing.prompt || pricing.input || 0);
+                let completionPrice = parseFloat(pricing.completion || pricing.output || 0);
+                const unit = (pricing.unit || "").toLowerCase();
+                let inputPricePer1M = 0, outputPricePer1M = 0, hasPricing = false;
 
-            if (hasPricing) {
-                priceInfo.innerHTML = `
-                    <div class="flex flex-wrap items-center gap-3 mt-1">
-                        <span class="flex items-center gap-1.5">
-                            <span class="text-zinc-500">Input:</span> 
-                            <strong class="text-emerald-400 font-semibold">$${inputPricePer1M.toFixed(2)}</strong>
-                            <span class="text-zinc-600">/ 1M tokens</span>
-                        </span>
-                        <span class="text-zinc-700">|</span>
-                        <span class="flex items-center gap-1.5">
-                            <span class="text-zinc-500">Output:</span> 
-                            <strong class="text-amber-400 font-semibold">$${outputPricePer1M.toFixed(2)}</strong>
-                            <span class="text-zinc-600">/ 1M tokens</span>
-                        </span>
-                    </div>
-                `;
-                priceInfo.classList.remove('hidden');
-            } else {
-                priceInfo.innerHTML = `<div class="mt-1 text-zinc-600 italic">Pricing information not available for this model.</div>`;
-                priceInfo.classList.remove('hidden');
-            }
+                if (promptPrice > 0 || completionPrice > 0) {
+                    hasPricing = true;
+                    if (unit.includes("million") || unit.includes("1m")) { inputPricePer1M = promptPrice; outputPricePer1M = completionPrice; }
+                    else if (unit.includes("k") || unit.includes("1k") || unit.includes("thousand")) { inputPricePer1M = promptPrice * 1000; outputPricePer1M = completionPrice * 1000; }
+                    else { if (promptPrice > 0.1 && !unit.includes("token")) { inputPricePer1M = promptPrice; outputPricePer1M = completionPrice; } else { inputPricePer1M = promptPrice * 1000000; outputPricePer1M = completionPrice * 1000000; } }
+                }
+
+                const shortName = modelId.length > 35 ? modelId.substring(0, 32) + '...' : modelId;
+                if (hasPricing) {
+                    html += `<div class="flex items-center gap-2"><span class="text-zinc-500 truncate max-w-[140px]" title="${escapeHtml(modelId)}">${escapeHtml(shortName)}</span><span class="text-emerald-400">$${inputPricePer1M.toFixed(2)}</span><span class="text-zinc-700">/</span><span class="text-amber-400">$${outputPricePer1M.toFixed(2)}</span><span class="text-zinc-600">/1M</span></div>`;
+                } else {
+                    html += `<div class="flex items-center gap-2"><span class="text-zinc-500 truncate max-w-[140px]" title="${escapeHtml(modelId)}">${escapeHtml(shortName)}</span><span class="text-zinc-600 italic">No pricing</span></div>`;
+                }
+            });
+            html += '</div>';
+            priceInfo.innerHTML = html;
+            priceInfo.classList.remove('hidden');
         }
 
         function renderModelDropdown(filter) {
             modelDropdown.innerHTML = '';
             const filtered = allModels.filter(m => m.toLowerCase().includes(filter.toLowerCase()));
-            
+
             filtered.sort((a, b) => {
                 const aFav = favoriteModels.includes(a);
                 const bFav = favoriteModels.includes(b);
@@ -542,39 +718,42 @@
                 modelDropdown.innerHTML = '<div class="p-3 text-zinc-500 text-sm text-center">No models found</div>';
                 return;
             }
-            
+
             filtered.forEach(model => {
                 const isFav = favoriteModels.includes(model);
+                const isSel = selectedModels.includes(model);
                 const div = document.createElement('div');
-                div.className = 'model-item p-2.5 px-3 cursor-pointer text-sm text-zinc-300 flex justify-between items-center';
-                
-                const starSvg = isFav 
-                    ? `<svg class="w-4 h-4 text-yellow-400 fill-current" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`
-                    : `<svg class="w-4 h-4 text-zinc-600 hover:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>`;
+                div.className = `model-item p-2.5 px-3 cursor-pointer text-sm text-zinc-300 flex items-center gap-2 ${isSel ? 'selected' : ''}`;
+
+                const checkSvg = isSel
+                    ? `<svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`
+                    : `<div class="w-4 h-4 flex-shrink-0 border border-zinc-600 rounded"></div>`;
+
+                const starSvg = isFav
+                    ? `<svg class="w-3.5 h-3.5 text-yellow-400 fill-current flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`
+                    : `<svg class="w-3.5 h-3.5 text-zinc-600 hover:text-yellow-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>`;
 
                 div.innerHTML = `
-                    <span class="truncate flex-1 mr-2 model-name"></span>
-                    <button class="star-btn p-1 rounded hover:bg-white/10 transition flex items-center justify-center">
-                        ${starSvg}
-                    </button>
+                    <span class="check-area flex items-center justify-center flex-shrink-0">${checkSvg}</span>
+                    <span class="truncate flex-1 mr-1 model-name"></span>
+                    <button class="star-btn p-1 rounded hover:bg-white/10 transition flex items-center justify-center flex-shrink-0">${starSvg}</button>
                 `;
                 div.querySelector('.model-name').textContent = model;
-                
+
                 div.querySelector('.model-name').addEventListener('mousedown', (e) => {
                     e.preventDefault();
-                    modelSelectHidden.value = model;
-                    modelSearch.value = model;
-                    modelDropdown.classList.add('hidden');
-                    localStorage.setItem('nanogpt_model', model);
-                    updateModelPrice();
+                    toggleModelInSelection(model);
                 });
-                
+                div.querySelector('.check-area').addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    toggleModelInSelection(model);
+                });
                 div.querySelector('.star-btn').addEventListener('mousedown', (e) => {
                     e.preventDefault();
-                    e.stopPropagation(); 
+                    e.stopPropagation();
                     toggleFavorite(model);
                 });
-                
+
                 modelDropdown.appendChild(div);
             });
         }
@@ -630,22 +809,41 @@
                 modelsMap = {};
                 models.forEach(m => { const id = m.id || m; modelsMap[id] = m; });
                 allModels = Object.keys(modelsMap).sort((a, b) => a.localeCompare(b));
-                const savedModel = localStorage.getItem('nanogpt_model');
-                if (savedModel && allModels.includes(savedModel)) {
-                    modelSelectHidden.value = savedModel; modelSearch.value = savedModel;
-                } else if (allModels.length > 0) {
-                    modelSelectHidden.value = allModels[0]; modelSearch.value = allModels[0];
-                    localStorage.setItem('nanogpt_model', allModels[0]);
-                } else { modelSearch.value = ''; }
+
+                // Restore previously selected models if still available
+                selectedModels = selectedModels.filter(m => allModels.includes(m));
+                if (selectedModels.length === 0) {
+                    const savedModel = localStorage.getItem('nanogpt_model');
+                    if (savedModel && allModels.includes(savedModel)) {
+                        selectedModels = [savedModel];
+                    } else if (allModels.length > 0) {
+                        selectedModels = [allModels[0]];
+                    }
+                }
+                localStorage.setItem('nanogpt_selected_models', JSON.stringify(selectedModels));
+
+                modelSearch.value = '';
                 renderModelDropdown('');
+                renderSelectedModelTags();
                 updateModelPrice();
             } catch (err) { modelSearch.value = 'Error loading models'; console.error(err); }
             finally { modelSearch.disabled = false; }
         }
 
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-            document.getElementById('sidebarOverlay').classList.toggle('hidden');
+            const isMobile = window.innerWidth < 768;
+            if (isMobile) {
+                document.getElementById('sidebar').classList.toggle('-translate-x-full');
+                document.getElementById('sidebarOverlay').classList.toggle('hidden');
+            } else {
+                document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('nanogpt_sidebar_collapsed', document.body.classList.contains('sidebar-collapsed'));
+            }
+        }
+
+        // Restore sidebar state on desktop
+        if (localStorage.getItem('nanogpt_sidebar_collapsed') === 'true') {
+            document.body.classList.add('sidebar-collapsed');
         }
 
         async function initHistory() {
@@ -677,38 +875,137 @@
                 list.innerHTML = '<div class="text-center text-zinc-600 text-xs mt-8 px-4">No conversations yet.<br>Start a new chat to begin.</div>';
                 return;
             }
-            sorted.forEach(chat => {
+
+            // Build sessionId → indices map (in sorted order)
+            const sessionGroups = {};
+            sorted.forEach((chat, i) => {
+                const sid = chat.sessionId;
+                if (!sid) return;
+                if (!sessionGroups[sid]) sessionGroups[sid] = [];
+                sessionGroups[sid].push(i);
+            });
+
+            // For each index, determine thread position
+            const threadInfo = {};
+            for (const [sid, indices] of Object.entries(sessionGroups)) {
+                if (indices.length < 2) {
+                    indices.forEach(i => threadInfo[i] = 'only');
+                } else {
+                    indices.forEach((i, j) => {
+                        if (j === 0) threadInfo[i] = 'first';
+                        else if (j === indices.length - 1) threadInfo[i] = 'last';
+                        else threadInfo[i] = 'middle';
+                    });
+                }
+            }
+
+            // Generate a stable color from sessionId
+            function sessionColor(sid) {
+                if (!sid) return 'rgba(99,102,241,0.25)';
+                let hash = 0;
+                for (let i = 0; i < sid.length; i++) hash = ((hash << 5) - hash) + sid.charCodeAt(i);
+                const hue = Math.abs(hash) % 360;
+                return `hsl(${hue}, 50%, 55%)`;
+            }
+
+            sorted.forEach((chat, i) => {
                 const div = document.createElement('div');
-                div.className = `history-item p-2.5 px-3 rounded-lg cursor-pointer flex justify-between items-start group ${currentChatId === chat.id ? 'active' : ''}`;
+                const position = threadInfo[i];
+                let threadClass = '';
+                if (position && position !== 'only') threadClass = 'context-thread thread-' + position;
+
+                div.className = `history-item p-2.5 px-3 rounded-lg cursor-pointer flex justify-between items-start group ${currentChatId === chat.id ? 'active' : ''} ${threadClass}`;
+                if (threadClass) {
+                    div.style.setProperty('--thread-color', sessionColor(chat.sessionId));
+                    // Override the ::before background with the session color
+                }
+
                 const title = chat.prompt.substring(0, 40) + (chat.prompt.length > 40 ? '...' : '') || 'New Chat';
-                const modelBadge = chat.model ? `<div class="text-[10px] text-indigo-300/70 truncate mt-0.5 font-mono">${escapeHtml(chat.model)}</div>` : '';
+                const models = chat.models || (chat.model ? [chat.model] : []);
+                const modelBadge = models.length > 0
+                    ? `<div class="text-[10px] text-indigo-300/70 truncate mt-0.5 font-mono">${models.length > 1 ? models.length + ' models' : escapeHtml(models[0])}</div>`
+                    : '';
+
+                const threadDot = (position && position !== 'only')
+                    ? `<div class="thread-dot" style="background:${sessionColor(chat.sessionId)}"></div>`
+                    : '';
+
                 div.innerHTML = `<div class="flex-1 min-w-0" onclick="loadChat('${chat.id}')">
                                    <div class="truncate text-[13px] text-zinc-300">${escapeHtml(title)}</div>
                                    ${modelBadge}
                                  </div>
-                                 <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="text-zinc-600 hover:text-red-400 ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-lg leading-none flex-shrink-0">×</button>`;
+                                 <button onclick="event.stopPropagation(); deleteChat('${chat.id}')" class="text-zinc-600 hover:text-red-400 ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-lg leading-none flex-shrink-0">×</button>
+                                 ${threadDot}`;
                 list.appendChild(div);
             });
         }
 
-        function addToHistory(data) {
+        function addToHistory(prompt, models, responses, mode, files, contextMessages) {
             const id = Date.now().toString();
-            const chatObj = { id, prompt: document.getElementById('prompt').value, model: modelSelectHidden.value, mode: searchMode.value, files: uploadedFiles.map(f => ({name: f.name, type: f.type})), apiResponse: data, timestamp: Date.now() };
-            chatHistory.push(chatObj); currentChatId = id;
+            if (!currentSessionId) currentSessionId = 'sess_' + Date.now();
+            const chatObj = {
+                id,
+                sessionId: currentSessionId,
+                prompt,
+                models: [...models],
+                responses,
+                mode,
+                files: files.map(f => ({ name: f.name, type: f.type })),
+                contextMessages: contextMessages || [],
+                timestamp: Date.now()
+            };
+            chatHistory.push(chatObj);
+            currentChatId = id;
             if (chatHistory.length > 50) chatHistory.shift();
-            saveHistoryToServer(); renderHistory();
+            saveHistoryToServer();
+            renderHistory();
+            return id;
         }
 
         function loadChat(id) {
             const chat = chatHistory.find(c => c.id === id); if (!chat) return;
-            currentChatId = id; document.getElementById('prompt').value = chat.prompt;
-            if (chat.model && allModels.includes(chat.model)) { 
-                modelSelectHidden.value = chat.model; 
-                modelSearch.value = chat.model; 
-                updateModelPrice();
-            }
+            currentChatId = id;
+            currentSessionId = chat.sessionId || null;
+            document.getElementById('prompt').value = chat.prompt;
+
+            // Restore models
+            const models = chat.models || (chat.model ? [chat.model] : []);
+            selectedModels = models.filter(m => allModels.includes(m));
+            localStorage.setItem('nanogpt_selected_models', JSON.stringify(selectedModels));
+            renderSelectedModelTags();
+            updateModelPrice();
+
             if (chat.mode !== undefined) searchMode.value = chat.mode;
-            uploadedFiles = []; renderFileList(); renderApiResponse(chat.apiResponse); renderHistory();
+
+            // Restore context messages
+            chatMessages = chat.contextMessages || [];
+            renderChatContextIndicator();
+
+            uploadedFiles = []; renderFileList();
+
+            // Render responses
+            responsesContainer.innerHTML = '';
+            responsesContainer.classList.remove('hidden');
+            responsesContainer.classList.toggle('single', models.length <= 1);
+            const responses = chat.responses || {};
+            if (chat.apiResponse && !chat.responses) {
+                // Legacy single-model format
+                const model = chat.model || 'Unknown';
+                const panel = createResponsePanel(model);
+                responsesContainer.appendChild(panel);
+                renderSingleResponse(panel, chat.apiResponse, model);
+            } else {
+                for (const model of models) {
+                    const resp = responses[model];
+                    if (resp) {
+                        const panel = createResponsePanel(model);
+                        responsesContainer.appendChild(panel);
+                        renderSingleResponse(panel, resp, model);
+                    }
+                }
+            }
+
+            renderHistory();
             if (window.innerWidth < 768) toggleSidebar();
         }
 
@@ -718,17 +1015,24 @@
         }
 
         function newChat() {
-            currentChatId = null; document.getElementById('prompt').value = '';
-            responseDiv.innerHTML = ''; responseDiv.classList.add('hidden');
-            uploadedFiles = []; renderFileList(); renderHistory();
+            currentChatId = null;
+            currentSessionId = null;
+            document.getElementById('prompt').value = '';
+            responsesContainer.innerHTML = '';
+            responsesContainer.classList.add('hidden');
+            chatMessages = [];
+            uploadedFiles = [];
+            renderFileList();
+            renderHistory();
+            renderChatContextIndicator();
         }
 
         function escapeHtml(text) {
             const div = document.createElement('div'); div.textContent = text; return div.innerHTML;
         }
 
-        function addCopyButtons() {
-            document.querySelectorAll('.prose pre').forEach(pre => {
+        function addCopyButtons(container) {
+            (container || document).querySelectorAll('.prose pre').forEach(pre => {
                 if (pre.querySelector('.copy-btn')) return;
                 const btn = document.createElement('button');
                 btn.className = 'copy-btn';
@@ -748,15 +1052,102 @@
             });
         }
 
-        function renderApiResponse(data) {
-            responseDiv.classList.remove('hidden');
+        function createResponsePanel(model) {
+            const panel = document.createElement('div');
+            panel.className = 'response-panel glass rounded-2xl animate-in';
+            panel.setAttribute('data-model', model);
+            const shortModel = model.length > 50 ? model.substring(0, 47) + '...' : model;
+            panel.innerHTML = `
+                <div class="response-panel-header px-5 py-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-indigo-400/60"></div>
+                        <span class="text-sm font-semibold text-zinc-300 font-mono">${escapeHtml(shortModel)}</span>
+                    </div>
+                    <div class="panel-status text-[11px] text-zinc-500 flex items-center gap-1.5">
+                        <div class="loader" style="width:14px;height:14px;border-width:1.5px;"></div>
+                        <span>Connecting...</span>
+                    </div>
+                </div>
+                <div class="p-5 min-h-[80px] prose max-w-none panel-content">
+                    <div class="flex items-center gap-3 text-zinc-400 text-sm"><div class="loader"></div> Waiting for response...</div>
+                </div>`;
+            return panel;
+        }
+
+        function getModelPricing(model) {
+            const modelData = modelsMap[model] || {};
+            const pricing = modelData.pricing || {};
+            let promptPrice = parseFloat(pricing.prompt || pricing.input || 0);
+            let completionPrice = parseFloat(pricing.completion || pricing.output || 0);
+            const unit = (pricing.unit || "").toLowerCase();
+            let inputPricePerToken = 0, outputPricePerToken = 0, pricing_available = true;
+
+            if (promptPrice > 0 || completionPrice > 0) {
+                if (unit.includes("million") || unit.includes("1m")) { inputPricePerToken = promptPrice / 1000000; outputPricePerToken = completionPrice / 1000000; }
+                else if (unit.includes("k") || unit.includes("1k") || unit.includes("thousand")) { inputPricePerToken = promptPrice / 1000; outputPricePerToken = completionPrice / 1000; }
+                else { if (promptPrice > 0.1 && !unit.includes("token")) { inputPricePerToken = promptPrice / 1000000; outputPricePerToken = completionPrice / 1000000; } else { inputPricePerToken = promptPrice; outputPricePerToken = completionPrice; } }
+            } else { pricing_available = false; }
+
+            return { inputPricePerToken, outputPricePerToken, pricing_available };
+        }
+
+        function buildUsageHtml(usageData, model, mode) {
+            const inputTokens = usageData.prompt_tokens || usageData.input_tokens || 0;
+            const outputTokens = usageData.completion_tokens || usageData.output_tokens || 0;
+            const totalTokens = usageData.total_tokens || (inputTokens + outputTokens);
+            const { inputPricePerToken, outputPricePerToken, pricing_available } = getModelPricing(model);
+            const searchFee = mode === ":online/linkup-deep" ? 0.06 : (mode.startsWith(":online") ? 0.006 : 0);
+            const tokenCost = (inputTokens * inputPricePerToken) + (outputTokens * outputPricePerToken);
+            const totalCost = tokenCost + searchFee;
+
+            let html = `<div class="mt-6 pt-4 border-t border-white/5">
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <span class="text-[10px] uppercase tracking-wider text-zinc-600 font-semibold">Usage</span>
+                </div>
+                <div class="grid grid-cols-3 gap-3 mb-3">
+                    <div class="bg-black/20 rounded-lg p-3 border border-white/5">
+                        <div class="text-[10px] uppercase tracking-wide text-zinc-600 mb-1">Input</div>
+                        <div class="text-sm font-semibold text-zinc-200 font-mono">${inputTokens.toLocaleString()}</div>
+                    </div>
+                    <div class="bg-black/20 rounded-lg p-3 border border-white/5">
+                        <div class="text-[10px] uppercase tracking-wide text-zinc-600 mb-1">Output</div>
+                        <div class="text-sm font-semibold text-zinc-200 font-mono">${outputTokens.toLocaleString()}</div>
+                    </div>
+                    <div class="bg-black/20 rounded-lg p-3 border border-white/5">
+                        <div class="text-[10px] uppercase tracking-wide text-zinc-600 mb-1">Total</div>
+                        <div class="text-sm font-semibold text-zinc-200 font-mono">${totalTokens.toLocaleString()}</div>
+                    </div>
+                </div>`;
+
+            if (pricing_available || searchFee > 0) {
+                html += `<div class="flex flex-wrap gap-2">`;
+                if (pricing_available) html += `<div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-md text-xs"><span class="text-emerald-400/70">Token Cost</span><strong class="text-emerald-400 font-mono">$${tokenCost.toFixed(6)}</strong></div>`;
+                if (searchFee > 0) html += `<div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-md text-xs"><span class="text-amber-400/70">Search Fee</span><strong class="text-amber-400 font-mono">$${searchFee.toFixed(3)}</strong></div>`;
+                html += `<div class="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-md text-xs"><span class="text-indigo-300/70">Total</span><strong class="text-indigo-300 font-mono">$${totalCost.toFixed(6)}</strong></div></div>`;
+            } else if (!usageData.prompt_tokens && !usageData.input_tokens) {
+                html += `<div class="text-amber-500/60 text-xs">* Exact token usage not provided.</div>`;
+            } else {
+                html += `<div class="text-amber-500/60 text-xs">* Pricing metadata not available.</div>`;
+            }
+            html += `</div>`;
+            return html;
+        }
+
+        function renderSingleResponse(panel, data, model) {
+            const contentDiv = panel.querySelector('.panel-content');
+            const statusDiv = panel.querySelector('.panel-status');
+            const mode = searchMode.value;
+
             if (data.error) {
-                responseDiv.innerHTML = `<div class="flex items-start gap-3 text-red-300"><svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><div><div class="font-semibold text-sm mb-1">Error</div><div class="text-sm text-red-300/80 font-mono">${typeof data.error === 'object' ? JSON.stringify(data.error) : data.error}</div></div></div>`;
+                statusDiv.innerHTML = `<span class="text-red-400">Error</span>`;
+                contentDiv.innerHTML = `<div class="flex items-start gap-3 text-red-300"><svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><div><div class="font-semibold text-sm mb-1">Error</div><div class="text-sm text-red-300/80 font-mono">${typeof data.error === 'object' ? JSON.stringify(data.error) : data.error}</div></div></div>`;
             } else if (data.choices && data.choices.length > 0) {
+                statusDiv.innerHTML = `<span class="text-emerald-400">Done</span>`;
                 const choice = data.choices[0];
                 const content = choice.message.content || "";
                 const reasoning = choice.message.reasoning_content || "";
                 let html = "";
+
                 if (reasoning) {
                     html += `<details class="mb-5">
                                <summary class="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300 transition select-none flex items-center gap-1.5">
@@ -766,237 +1157,258 @@
                                <div class="mt-3 p-4 bg-black/30 rounded-lg border border-white/5 text-[13px] text-zinc-400 whitespace-pre-wrap font-mono leading-relaxed">${escapeHtml(reasoning)}</div>
                              </details>`;
                 }
+
                 try { html += marked.parse(content); } catch(e) { html += `<div class="whitespace-pre-wrap">${escapeHtml(content)}</div>`; }
-
-                const usage = data.usage || {};
-                const inputTokens = usage.prompt_tokens || usage.input_tokens || 0;
-                const outputTokens = usage.completion_tokens || usage.output_tokens || 0;
-                const totalTokens = usage.total_tokens || (inputTokens + outputTokens);
-
-                let usageHtml = `<div class="mt-6 pt-4 border-t border-white/5">
-                    <div class="flex flex-wrap items-center gap-2 mb-3">
-                        <span class="text-[10px] uppercase tracking-wider text-zinc-600 font-semibold">Usage</span>
-                    </div>
-                    <div class="grid grid-cols-3 gap-3 mb-3">
-                        <div class="bg-black/20 rounded-lg p-3 border border-white/5">
-                            <div class="text-[10px] uppercase tracking-wide text-zinc-600 mb-1">Input</div>
-                            <div class="text-sm font-semibold text-zinc-200 font-mono">${inputTokens.toLocaleString()}</div>
-                        </div>
-                        <div class="bg-black/20 rounded-lg p-3 border border-white/5">
-                            <div class="text-[10px] uppercase tracking-wide text-zinc-600 mb-1">Output</div>
-                            <div class="text-sm font-semibold text-zinc-200 font-mono">${outputTokens.toLocaleString()}</div>
-                        </div>
-                        <div class="bg-black/20 rounded-lg p-3 border border-white/5">
-                            <div class="text-[10px] uppercase tracking-wide text-zinc-600 mb-1">Total</div>
-                            <div class="text-sm font-semibold text-zinc-200 font-mono">${totalTokens.toLocaleString()}</div>
-                        </div>
-                    </div>`;
-
-                const modelData = modelsMap[modelSelectHidden.value] || {};
-                const pricing = modelData.pricing || {};
-                let promptPrice = parseFloat(pricing.prompt || pricing.input || 0);
-                let completionPrice = parseFloat(pricing.completion || pricing.output || 0);
-                const unit = (pricing.unit || "").toLowerCase();
-                let inputPricePerToken = 0, outputPricePerToken = 0, pricing_available = true;
-
-                if (promptPrice > 0 || completionPrice > 0) {
-                    if (unit.includes("million") || unit.includes("1m")) { inputPricePerToken = promptPrice / 1000000; outputPricePerToken = completionPrice / 1000000; }
-                    else if (unit.includes("k") || unit.includes("1k") || unit.includes("thousand")) { inputPricePerToken = promptPrice / 1000; outputPricePerToken = completionPrice / 1000; }
-                    else { if (promptPrice > 0.1 && !unit.includes("token")) { inputPricePerToken = promptPrice / 1000000; outputPricePerToken = completionPrice / 1000000; } else { inputPricePerToken = promptPrice; outputPricePerToken = completionPrice; } }
-                } else { pricing_available = false; }
-
-                const mode = searchMode.value;
-                const searchFee = mode === ":online/linkup-deep" ? 0.06 : (mode.startsWith(":online") ? 0.006 : 0);
-                const tokenCost = (inputTokens * inputPricePerToken) + (outputTokens * outputPricePerToken);
-                const totalCost = tokenCost + searchFee;
-
-                if (pricing_available || searchFee > 0) {
-                    usageHtml += `<div class="flex flex-wrap gap-2">`;
-                    if (pricing_available) usageHtml += `<div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-md text-xs"><span class="text-emerald-400/70">Token Cost</span><strong class="text-emerald-400 font-mono">$${tokenCost.toFixed(6)}</strong></div>`;
-                    if (searchFee > 0) usageHtml += `<div class="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-md text-xs"><span class="text-amber-400/70">Search Fee</span><strong class="text-amber-400 font-mono">$${searchFee.toFixed(3)}</strong></div>`;
-                    usageHtml += `<div class="flex items-center gap-1.5 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-md text-xs"><span class="text-indigo-300/70">Total</span><strong class="text-indigo-300 font-mono">$${totalCost.toFixed(6)}</strong></div></div>`;
-                } else if (!usage.prompt_tokens && !usage.input_tokens) {
-                    usageHtml += `<div class="text-amber-500/60 text-xs">* Exact token usage not provided.</div>`;
-                } else { usageHtml += `<div class="text-amber-500/60 text-xs">* Pricing metadata not available.</div>`; }
-                usageHtml += `</div>`;
-                html += usageHtml;
-                responseDiv.innerHTML = html;
-                addCopyButtons();
-            } else { responseDiv.innerHTML = `<pre class="text-xs font-mono text-zinc-400 overflow-x-auto">${JSON.stringify(data, null, 2)}</pre>`; }
+                html += buildUsageHtml(data.usage || {}, model, mode);
+                contentDiv.innerHTML = html;
+                addCopyButtons(contentDiv);
+            } else {
+                statusDiv.innerHTML = `<span class="text-zinc-500">No content</span>`;
+                contentDiv.innerHTML = `<pre class="text-xs font-mono text-zinc-400 overflow-x-auto">${JSON.stringify(data, null, 2)}</pre>`;
+            }
         }
 
         function stopChat() {
-            if (abortController) { abortController.abort(); abortController = null; }
+            Object.values(abortControllers).forEach(c => c.abort());
+            abortControllers = {};
+        }
+
+        function buildHistoryMessages() {
+            if (!contextEnabled || chatMessages.length === 0) return [];
+            return chatMessages.map(m => ({ role: m.role, content: m.content }));
         }
 
         async function sendChat() {
             const apiKey = apiKeyInput.value;
-            const model = modelSelectHidden.value;
             const mode = searchMode.value;
             const promptText = document.getElementById('prompt').value;
 
-            if (!apiKey || !model) { alert('Please enter API Key and select a model.'); return; }
+            if (!apiKey) { alert('Please enter an API Key.'); return; }
+            if (selectedModels.length === 0) { alert('Please select at least one model.'); return; }
 
-            abortController = new AbortController();
-            const signal = abortController.signal;
-
-            sendBtn.disabled = true; stopBtn.classList.remove('hidden');
-            responseDiv.classList.remove('hidden');
+            sendBtn.disabled = true;
+            stopBtn.classList.remove('hidden');
+            responsesContainer.innerHTML = '';
+            responsesContainer.classList.remove('hidden');
+            responsesContainer.classList.toggle('single', selectedModels.length === 1);
             autoScrollContainer.classList.remove('hidden');
-            responseDiv.innerHTML = '<div class="flex items-center gap-3 text-zinc-400 text-sm"><div class="loader"></div> Establishing connection...</div>';
+
+            const history = buildHistoryMessages();
+            const modelsToSend = [...selectedModels];
+            abortControllers = {};
+
+            // Create response panels for each model
+            const panels = {};
+            const streamData = {};
+            modelsToSend.forEach(model => {
+                const panel = createResponsePanel(model);
+                responsesContainer.appendChild(panel);
+                panels[model] = panel;
+                streamData[model] = { reasoning: '', content: '', usageData: null };
+            });
+
+            // Update multi-thinking panel
+            const multiThinkingPanel = document.getElementById('multiThinkingPanel');
+            const multiThinkingList = document.getElementById('multiThinkingList');
+            multiThinkingPanel.classList.remove('hidden');
+            multiThinkingList.innerHTML = '';
+            modelsToSend.forEach(model => {
+                const shortName = model.length > 30 ? model.substring(0, 27) + '...' : model;
+                const item = document.createElement('div');
+                item.className = 'flex items-center gap-2 px-2 py-1 text-zinc-400';
+                item.setAttribute('data-model', model);
+                item.innerHTML = `<div class="loader" style="width:12px;height:12px;border-width:1.5px;"></div><span class="truncate">${escapeHtml(shortName)}</span>`;
+                multiThinkingList.appendChild(item);
+            });
+
             if (autoScrollEnabled) {
                 mainScrollContainer.scrollTo({ top: mainScrollContainer.scrollHeight, behavior: 'smooth' });
             }
 
-            // Calculate real-time pricing metrics
-            const modelData = modelsMap[model] || {};
-            const pricing = modelData.pricing || {};
-            let promptPrice = parseFloat(pricing.prompt || pricing.input || 0);
-            let completionPrice = parseFloat(pricing.completion || pricing.output || 0);
-            const unit = (pricing.unit || "").toLowerCase();
-            let inputPricePerToken = 0, outputPricePerToken = 0;
+            // Launch parallel requests
+            const promises = modelsToSend.map(async (model) => {
+                const controller = new AbortController();
+                abortControllers[model] = controller;
+                const signal = controller.signal;
+                const panel = panels[model];
+                const sd = streamData[model];
+                const statusDiv = panel.querySelector('.panel-status');
+                const contentDiv = panel.querySelector('.panel-content');
 
-            if (promptPrice > 0 || completionPrice > 0) {
-                if (unit.includes("million") || unit.includes("1m")) { inputPricePerToken = promptPrice / 1000000; outputPricePerToken = completionPrice / 1000000; }
-                else if (unit.includes("k") || unit.includes("1k") || unit.includes("thousand")) { inputPricePerToken = promptPrice / 1000; outputPricePerToken = completionPrice / 1000; }
-                else { if (promptPrice > 0.1 && !unit.includes("token")) { inputPricePerToken = promptPrice / 1000000; outputPricePerToken = completionPrice / 1000000; } else { inputPricePerToken = promptPrice; outputPricePerToken = completionPrice; } }
-            }
+                const { inputPricePerToken, outputPricePerToken } = getModelPricing(model);
 
-            let reasoning = "", content = "", usageData = null;
+                const updateUI = () => {
+                    let html = "";
+                    if (sd.reasoning) {
+                        const estTokens = Math.ceil(sd.reasoning.length / 4);
+                        const estCost = estTokens * outputPricePerToken;
+                        html += `<details class="mb-5" open>
+                                   <summary class="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300 transition select-none flex items-center gap-1.5">
+                                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                       Thinking · ~${estTokens.toLocaleString()} tokens · ~$${estCost.toFixed(6)}
+                                   </summary>
+                                   <div class="mt-3 p-4 bg-black/30 rounded-lg border border-white/5 text-[13px] text-zinc-400 whitespace-pre-wrap font-mono leading-relaxed max-h-[300px] overflow-y-auto custom-scrollbar">${escapeHtml(sd.reasoning)}</div>
+                                 </details>`;
+                        statusDiv.innerHTML = `<span class="text-amber-400">Thinking...</span>`;
+                    }
+                    if (sd.content) {
+                        try { html += marked.parse(sd.content); } catch(e) { html += `<div class="whitespace-pre-wrap">${escapeHtml(sd.content)}</div>`; }
+                        statusDiv.innerHTML = `<span class="text-indigo-400">Streaming...</span>`;
+                    } else if (!sd.reasoning) {
+                        html = '<div class="flex items-center gap-3 text-zinc-400 text-sm"><div class="loader"></div> Waiting for model response...</div>';
+                    } else {
+                        html += '<div class="flex items-center gap-3 mt-4 text-zinc-500 text-sm"><div class="loader"></div> Preparing final response...</div>';
+                    }
+                    contentDiv.innerHTML = html;
+                    addCopyButtons(contentDiv);
 
-            const updateUI = () => {
-                let html = "";
-                const thinkingIndicator = document.getElementById('thinkingIndicator');
-                const thinkingStats = document.getElementById('thinkingStats');
-
-                if (reasoning) {
-                    const estTokens = Math.ceil(reasoning.length / 4);
-                    const estCost = estTokens * outputPricePerToken;
-                    
-                    thinkingIndicator.classList.remove('hidden');
-                    thinkingStats.textContent = `Thinking · ${reasoning.length.toLocaleString()} chars · ~${estTokens.toLocaleString()} tokens · ~$${estCost.toFixed(6)}`;
-
-                    html += `<details class="mb-5" open>
-                               <summary class="cursor-pointer text-xs text-zinc-500 hover:text-zinc-300 transition select-none flex items-center gap-1.5">
-                                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                                   Reasoning Process
-                               </summary>
-                               <div class="mt-3 p-4 bg-black/30 rounded-lg border border-white/5 text-[13px] text-zinc-400 whitespace-pre-wrap font-mono leading-relaxed">${escapeHtml(reasoning)}</div>
-                             </details>`;
-                } else {
-                    thinkingIndicator.classList.add('hidden');
-                }
-
-                if (content) {
-                    try { html += marked.parse(content); } catch(e) { html += `<div class="whitespace-pre-wrap">${escapeHtml(content)}</div>`; }
-                } else if (!reasoning) {
-                    html = '<div class="flex items-center gap-3 text-zinc-400 text-sm"><div class="loader"></div> Waiting for model response...</div>';
-                } else {
-                    html += '<div class="flex items-center gap-3 mt-4 text-zinc-500 text-sm"><div class="loader"></div> Preparing final response...</div>';
-                }
-                responseDiv.innerHTML = html;
-                addCopyButtons();
-                if (autoScrollEnabled) {
-                    mainScrollContainer.scrollTop = mainScrollContainer.scrollHeight;
-                }
-            };
-
-            try {
-                const res = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ api_key: apiKey, model: model, suffix: mode, prompt: promptText, files: uploadedFiles }),
-                    signal: signal
-                });
-
-                if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({ error: res.statusText }));
-                    throw new Error(typeof errorData.error === 'object' ? JSON.stringify(errorData.error) : errorData.error);
-                }
-
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = "";
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop();
-
-                    for (const line of lines) {
-                        const trimmed = line.trim();
-                        if (!trimmed) continue;
-
-                        let jsonStr = "";
-                        if (trimmed.startsWith('data: ')) {
-                            jsonStr = trimmed.slice(6);
-                        } else if (trimmed.startsWith('{')) {
-                            jsonStr = trimmed;
+                    // Update thinking panel
+                    const thinkItem = multiThinkingList.querySelector(`[data-model="${CSS.escape(model)}"]`);
+                    if (thinkItem) {
+                        if (sd.reasoning || sd.content) {
+                            const chars = sd.reasoning.length + sd.content.length;
+                            thinkItem.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400/60 flex-shrink-0"></span><span class="truncate text-amber-300/70">${chars.toLocaleString()} chars</span>`;
                         }
+                    }
 
-                        if (jsonStr && jsonStr !== '[DONE]') {
-                            try {
-                                const parsed = JSON.parse(jsonStr);
-                                if (parsed.error) throw new Error(typeof parsed.error === 'object' ? JSON.stringify(parsed.error) : parsed.error);
-                                if (parsed.usage) usageData = parsed.usage;
+                    if (autoScrollEnabled) {
+                        mainScrollContainer.scrollTop = mainScrollContainer.scrollHeight;
+                    }
+                };
 
-                                if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].message) {
-                                    const msg = parsed.choices[0].message;
-                                    if (msg.content) content += msg.content;
-                                    if (msg.reasoning_content) reasoning += msg.reasoning_content;
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ api_key: apiKey, model: model, suffix: mode, prompt: promptText, files: uploadedFiles, history }),
+                        signal
+                    });
+
+                    if (!res.ok) {
+                        const errorData = await res.json().catch(() => ({ error: res.statusText }));
+                        throw new Error(typeof errorData.error === 'object' ? JSON.stringify(errorData.error) : errorData.error);
+                    }
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = "";
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed) continue;
+                            let jsonStr = "";
+                            if (trimmed.startsWith('data: ')) { jsonStr = trimmed.slice(6); }
+                            else if (trimmed.startsWith('{')) { jsonStr = trimmed; }
+
+                            if (jsonStr && jsonStr !== '[DONE]') {
+                                try {
+                                    const parsed = JSON.parse(jsonStr);
+                                    if (parsed.error) throw new Error(typeof parsed.error === 'object' ? JSON.stringify(parsed.error) : parsed.error);
+                                    if (parsed.usage) sd.usageData = parsed.usage;
+                                    if (parsed.choices && parsed.choices.length > 0 && parsed.choices[0].message) {
+                                        const msg = parsed.choices[0].message;
+                                        if (msg.content) sd.content += msg.content;
+                                        if (msg.reasoning_content) sd.reasoning += msg.reasoning_content;
+                                    }
+                                    const choice = parsed.choices?.[0];
+                                    if (choice && choice.delta) {
+                                        const delta = choice.delta;
+                                        sd.reasoning += delta.reasoning_content || delta.reasoning || delta.thought || "";
+                                        sd.content += delta.content || "";
+                                    }
+                                } catch (e) {
+                                    if (e.message && !e.message.includes("JSON")) throw e;
                                 }
-
-                                const choice = parsed.choices?.[0];
-                                if (choice && choice.delta) {
-                                    const delta = choice.delta;
-                                    reasoning += delta.reasoning_content || delta.reasoning || delta.thought || "";
-                                    content += delta.content || "";
-                                }
-                            } catch (e) {
-                                if (e.message && !e.message.includes("JSON")) throw e;
                             }
                         }
+                        updateUI();
                     }
-                    updateUI();
-                }
 
-                if (!reasoning && !content && buffer.trim().startsWith('{')) {
-                    try {
-                        const parsed = JSON.parse(buffer);
-                        if (parsed.choices && parsed.choices.length > 0) {
-                            content = parsed.choices[0].message.content || "";
-                            reasoning = parsed.choices[0].message.reasoning_content || "";
-                            usageData = parsed.usage || {};
+                    if (!sd.reasoning && !sd.content && buffer.trim().startsWith('{')) {
+                        try {
+                            const parsed = JSON.parse(buffer);
+                            if (parsed.choices && parsed.choices.length > 0) {
+                                sd.content = parsed.choices[0].message.content || "";
+                                sd.reasoning = parsed.choices[0].message.reasoning_content || "";
+                                sd.usageData = parsed.usage || {};
+                            }
+                        } catch(e) {}
+                    }
+
+                    const mockData = { choices: [{ message: { content: sd.content, reasoning_content: sd.reasoning } }], usage: sd.usageData || {} };
+                    renderSingleResponse(panel, mockData, model);
+
+                    // Update thinking panel item
+                    const thinkItem = multiThinkingList.querySelector(`[data-model="${CSS.escape(model)}"]`);
+                    if (thinkItem) {
+                        thinkItem.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span><span class="truncate text-emerald-300/70">Done</span>`;
+                    }
+
+                    return { model, data: mockData, success: true };
+
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        statusDiv.innerHTML = `<span class="text-amber-400">Stopped</span>`;
+                        contentDiv.innerHTML += '<div class="mt-4 flex items-center gap-2 text-amber-400/80 text-sm bg-amber-500/10 border border-amber-500/20 rounded-lg p-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Stopped by user.</div>';
+                        if (sd.content || sd.reasoning) {
+                            const mockData = { choices: [{ message: { content: sd.content, reasoning_content: sd.reasoning } }], usage: sd.usageData || {} };
+                            return { model, data: mockData, success: true };
                         }
-                    } catch(e) {}
-                }
-
-                const mockData = { choices: [{ message: { content: content, reasoning_content: reasoning } }], usage: usageData || {} };
-                renderApiResponse(mockData);
-                if (content || reasoning) addToHistory(mockData);
-
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    responseDiv.innerHTML += '<div class="mt-4 flex items-center gap-2 text-amber-400/80 text-sm bg-amber-500/10 border border-amber-500/20 rounded-lg p-3"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>Generation stopped by user.</div>';
-                    if (content || reasoning) {
-                        const mockData = { choices: [{ message: { content: content, reasoning_content: reasoning } }], usage: usageData || {} };
-                        addToHistory(mockData);
+                    } else {
+                        statusDiv.innerHTML = `<span class="text-red-400">Error</span>`;
+                        contentDiv.innerHTML = `<div class="flex items-start gap-3 text-red-300"><svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><div><div class="font-semibold text-sm mb-1">Request Failed</div><div class="text-sm text-red-300/80 font-mono">${err.message}</div></div></div>`;
+                        const thinkItem = multiThinkingList.querySelector(`[data-model="${CSS.escape(model)}"]`);
+                        if (thinkItem) {
+                            thinkItem.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-400 flex-shrink-0"></span><span class="truncate text-red-300/70">Error</span>`;
+                        }
                     }
-                } else {
-                    responseDiv.innerHTML = `<div class="flex items-start gap-3 text-red-300"><svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><div><div class="font-semibold text-sm mb-1">Request Failed</div><div class="text-sm text-red-300/80 font-mono">${err.message}</div></div></div>`;
+                    return { model, data: null, success: false };
                 }
-            } finally {
-                sendBtn.disabled = false; stopBtn.classList.add('hidden'); abortController = null;
-                document.getElementById('thinkingIndicator').classList.add('hidden');
-                setTimeout(() => { if (!abortController) autoScrollContainer.classList.add('hidden'); }, 2000);
+            });
+
+            const results = await Promise.all(promises);
+
+            // Save to history
+            const responses = {};
+            let hasAnyContent = false;
+            results.forEach(r => {
+                if (r.success && r.data) {
+                    responses[r.model] = r.data;
+                    if (r.data.choices?.[0]?.message?.content) hasAnyContent = true;
+                }
+            });
+
+            if (hasAnyContent) {
+                // Add to conversation context for future requests
+                chatMessages.push({ role: 'user', content: promptText });
+                // Use the first successful response as context
+                const firstSuccess = results.find(r => r.success && r.data?.choices?.[0]?.message?.content);
+                if (firstSuccess) {
+                    chatMessages.push({ role: 'assistant', content: firstSuccess.data.choices[0].message.content });
+                }
+                renderChatContextIndicator();
+                addToHistory(promptText, modelsToSend, responses, mode, uploadedFiles, chatMessages);
             }
+
+            sendBtn.disabled = false;
+            stopBtn.classList.add('hidden');
+            abortControllers = {};
+            multiThinkingPanel.classList.add('hidden');
+            setTimeout(() => { autoScrollContainer.classList.add('hidden'); }, 2000);
         }
 
         marked.setOptions({ breaks: true, gfm: true });
         initHistory();
+        renderSelectedModelTags();
+        // Update context toggle UI
+        if (!contextEnabled) document.getElementById('contextToggle').classList.remove('active');
         if (apiKeyInput.value) fetchModels();
     </script>
 </body>

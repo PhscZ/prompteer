@@ -38,10 +38,21 @@ def chat():
     suffix = data.get('suffix', '')
     prompt_text = data.get('prompt', '')
     files = data.get('files', [])
+    history = data.get('history', [])
 
     if not api_key or not model: return jsonify({"error": "API Key and Model required"}), 400
 
     full_model = model + suffix
+    messages = []
+
+    for msg in history:
+        role = msg.get('role', 'user')
+        msg_content = msg.get('content', '')
+        if isinstance(msg_content, list):
+            messages.append({"role": role, "content": msg_content})
+        elif msg_content:
+            messages.append({"role": role, "content": msg_content})
+
     content = []
 
     for f in files:
@@ -58,7 +69,7 @@ def chat():
 
     if not content: return jsonify({"error": "Prompt or files are required"}), 400
 
-    messages = [{"role": "user", "content": content}]
+    messages.append({"role": "user", "content": content})
     
     payload = {
         "model": full_model, 
